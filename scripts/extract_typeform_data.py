@@ -2,11 +2,44 @@ import requests
 import datetime
 import csv
 import os
+import json
+from datetime import timezone
 
-def get_typeform_answers():
-    with open("form_id.txt", "r") as file:
-        form_id = file.read().strip()
 
+def get_typeform_questions(form_id, headers):
+    url = f"https://api.typeform.com/forms/{form_id}"
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        form_data = response.json()
+
+        questions = []
+
+        # Extract questions
+        for question in form_data.get("fields", []):
+            question_id = question.get("id", [])
+            question_title = question.get("title", [])
+            question_ref = question.get("ref", [])
+            question_properties = question.get("properties", [])
+            question_validations = question.get("validations", [])
+            question_required = question.get(
+                "validations", {}).get("required", False)
+            question_type = question.get("type", [])
+
+            print(f"question_id: {question_id}, question_title: {question_title}, question_ref: {question_ref}, question_properties: {question_properties}, question_required: {question_required}, question_type: {question_type}")
+            questions.append([question_id, question_title, question_ref, question_properties,
+                             question_validations, question_required, question_type])
+
+        with open('./data/typeform_questions.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['question_id', 'question_title', 'question_ref', 'question_properties',
+                            'question_validations', 'question_required', 'question_type'])  # header
+            writer.writerows(questions)
+    else:
+        print("Error:", response.status_code, response.text)
+
+
+def get_typeform_answers(form_id, headers):
     BASE_URL = f"https://api.typeform.com/forms/{form_id}/responses"
 
     end_date = datetime.date.today()
@@ -14,7 +47,7 @@ def get_typeform_answers():
     start_date = end_date - datetime.timedelta(days=1)
     start_time = "00:00:00"
     page_size = 1000
-    #timeframe = f"since={start_date}T{start_time}&until={end_date}T{end_time}"
+    # timeframe = f"since={start_date}T{start_time}&until={end_date}T{end_time}"
 
     params = {
         "page_size": page_size,
@@ -24,12 +57,6 @@ def get_typeform_answers():
 
     # endpoint = f"{self.BASE_URL}/forms/{form_id}/responses?{timeframe}&page_size={page_size}"
 
-    with open("access_token.txt", "r") as file:
-        access_token = file.read().strip()
-
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
     response = requests.get(BASE_URL, params=params, headers=headers)
 
     formatted_responses = []
@@ -49,7 +76,7 @@ def get_typeform_answers():
             metadata = form.get("metadata", [])
             answers = form.get("answers", [])
             formatted_responses.append([landing_id, landed_at, submitted_at, metadata, datetime.datetime.now(
-            ).strftime("%Y-%m-%d %H:%M:%S"), answers])
+                timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), json.dumps(answers)])
 
             # print(f"answers: {answers}")
 
@@ -67,8 +94,8 @@ def get_typeform_answers():
 
             # formatted_responses.append(response_dict)
             # print(f"formatted_responses: {formatted_responses}")
-        file_exists = os.path.isfile('../data/bronze.csv')
-        with open('output.csv', mode='a', newline='') as file:
+        file_exists = os.path.isfile('./data/typeform_responses.csv')
+        with open('./data/typeform_responses.csv', mode='a', newline='') as file:
             writer = csv.writer(file)
             if not file_exists:
                 writer.writerow(['landing_id', 'landed_at', 'submitted_at',
@@ -79,53 +106,16 @@ def get_typeform_answers():
     else:
         print("Error:", response.status_code, response.text)
 
-# def insert_responses_to_postgres(self):
-#     """
-#     Inserts transformed responses into PostgreSQL in row format.
-#     """
-#     extracted_data = self.get_form_answers()  # Fetch transformed responses
-
-#     if not extracted_data:
-#         print("⚠️ No responses found to insert.")
-#         return
-
-#     try:
-#         conn = psycopg2.connect(**self.db_params)
-#         cur = conn.cursor()
-
-#         # Get all unique question IDs from the extracted responses
-#         all_question_ids = set()
-#         for response in extracted_data:
-#             all_question_ids.update(response.keys())
-
-#         all_question_ids.discard("response_id")  # Remove response_id from column names
-#         all_question_ids.discard("submitted_at")  # Remove submitted_at from column names
-
-#         # Convert question IDs into SQL column names
-#         columns = ["response_id", "submitted_at"] + list(all_question_ids)
-#         placeholders = ", ".join(["%s"] * len(columns))
-#         insert_query = f"""
-#         INSERT INTO typeform_responses ({", ".join(columns)})
-#         VALUES ({placeholders})
-#         ON CONFLICT (response_id) DO UPDATE SET
-#         {", ".join([f"{col} = EXCLUDED.{col}" for col in all_question_ids])};
-#         """
-
-#         # Convert each response into a tuple matching column order
-#         records = []
-#         for response in extracted_data:
-#             row_values = [response.get(col, None) for col in columns]
-#             records.append(tuple(row_values))
-
-#         cur.executemany(insert_query, records)
-#         conn.commit()
-#         cur.close()
-#         conn.close()
-#         print(f"✅ Successfully inserted {len(records)} responses into PostgreSQL.")
-
-#     except Exception as e:
-#         print(f"❌ Database Error: {e}")
-
 
 if __name__ == "__main__":
-    get_form_answers()
+    with open("form_id.txt", "r") as file:
+        form_id = file.read().strip()
+
+    with open("access_token.txt", "r") as file:
+        access_token = file.read().strip()
+
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    get_typeform_questions(form_id, headers)
+    # get_typeform_answers(form_id, headers)
