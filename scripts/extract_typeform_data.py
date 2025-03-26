@@ -21,19 +21,16 @@ def get_typeform_questions(form_id, headers):
             question_title = question.get("title", [])
             question_ref = question.get("ref", [])
             question_properties = question.get("properties", [])
-            question_validations = question.get("validations", [])
-            question_required = question.get(
-                "validations", {}).get("required", False)
+            question_required = question.get("validations", {}).get("required", False)
             question_type = question.get("type", [])
 
-            print(f"question_id: {question_id}, question_title: {question_title}, question_ref: {question_ref}, question_properties: {question_properties}, question_required: {question_required}, question_type: {question_type}")
-            questions.append([question_id, question_title, question_ref, question_properties,
-                             question_validations, question_required, question_type])
+            questions.append([question_id, question_title, question_ref, json.dumps(question_properties),
+                             question_required, question_type])
 
         with open('./data/typeform_questions.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['question_id', 'question_title', 'question_ref', 'question_properties',
-                            'question_validations', 'question_required', 'question_type'])  # header
+                             'question_required', 'question_type'])  # header
             writer.writerows(questions)
     else:
         print("Error:", response.status_code, response.text)
@@ -95,7 +92,7 @@ def get_typeform_answers(form_id, headers):
             # formatted_responses.append(response_dict)
             # print(f"formatted_responses: {formatted_responses}")
         file_exists = os.path.isfile('./data/typeform_responses.csv')
-        with open('./data/typeform_responses.csv', mode='a', newline='') as file:
+        with open('./data/typeform_responses.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             if not file_exists:
                 writer.writerow(['landing_id', 'landed_at', 'submitted_at',
