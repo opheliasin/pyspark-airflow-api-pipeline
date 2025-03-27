@@ -1,5 +1,4 @@
-access_token.txt
-form_id.txt
 venv/
 data/
 myenv/
+.env
