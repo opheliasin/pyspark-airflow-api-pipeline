@@ -6,7 +6,7 @@ import json
 from datetime import timezone
 
 
-def get_typeform_answers(form_id, headers, execution_date):
+def get_typeform_submissions(form_id, headers, execution_date):
     BASE_URL = f"https://api.typeform.com/forms/{form_id}/responses"
 
     end_date = execution_date
@@ -54,8 +54,8 @@ def get_typeform_answers(form_id, headers, execution_date):
         print("Error:", response.status_code, response.text)
 
 
-def main(execution_date):
-    import pendulum  # optional but preferred
+def main(execution_date, **kwargs):
+    import pendulum  
     from dotenv import load_dotenv
     import os
 
@@ -72,4 +72,4 @@ def main(execution_date):
         "Authorization": f"Bearer {token}"
     }
 
-    get_typeform_answers(form_id, headers, execution_date)
+    get_typeform_submissions(form_id, headers, execution_date)
