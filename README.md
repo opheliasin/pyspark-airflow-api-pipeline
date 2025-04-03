@@ -38,7 +38,7 @@ The following diagram shows the entity relationships in the silver and gold leve
 ![silver_ERD](images/silver_ERD.png)
 
 ### Gold
-![gold_ERD](images/gold_ERD.png)
+![gold_ERD_latest](images/gold_ERD.png)
 
 ## Next Steps
 The following enhancements are planned:
