@@ -32,10 +32,13 @@ The current implementation follows the medallion architecture pattern:
 4. **Storage**: Saving processed data as Parquet files
 
 ## ERD
-The following diagram shows the entity relationships in the silver and gold level
+The following diagram shows the entity relationships in the silver and gold levels.
 
 ### Silver
 ![silver_ERD](images/silver_ERD.png)
+
+### Gold
+![gold_ERD](images/gold_ERD.png)
 
 ## Next Steps
 The following enhancements are planned:
