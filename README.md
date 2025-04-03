@@ -31,6 +31,12 @@ The current implementation follows the medallion architecture pattern:
 3. **Orchestration**: Building an Airflow pipeline to automate the entire process
 4. **Storage**: Saving processed data as Parquet files
 
+## ERD
+The following diagram shows the entity relationships in the silver and gold level
+
+### Silver
+![silver_ERD](images/silver_ERD.png)
+
 ## Next Steps
 The following enhancements are planned:
 1. Replace CSV storage with Snowflake or BigQuery integration
